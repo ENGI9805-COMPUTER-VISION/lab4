@@ -1,5 +1,6 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Part 1%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear;
-oim1 = imread('img/01.jpg');
+oim1 = imread('img/09.jpg');
 oim2 = imread('img/ref.jpg');
 
 [r,c,n] = size(oim1);
@@ -17,19 +18,32 @@ end
 [fim2,dim2] = vl_sift(single(oim2));
 [matches,scores] = vl_ubcmatch(dim1,dim2);
 
-im1_Points = fim1(1:2,matches(1,:));
-im2_Points = fim2(1:2,matches(2,:));
+[sv, indx] = sort(scores, 'ascend');
+match_offs = matches(:, indx);
+offs1 = match_offs(1, 1:10);
+offs2 = match_offs(2, 1:10);
+
+im1_points = fim1(1:2,offs1);
+im2_points = fim2(1:2,offs2);
 
 figure;
-showMatchedFeatures(oim1, oim2, im1_Points', ...
-    im2_Points', 'montage');
+showMatchedFeatures(oim1, oim2, im1_points', ...
+    im2_points', 'montage');
 
-[tform, inside_im1_Points, inside_im2_Points] = ...
-    estimateGeometricTransform(im1_Points', im2_Points', 'affine');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Part 2%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+offs1 = match_offs(1, 1:3);
+offs2 = match_offs(2, 1:3);
+
+im1_points = fim1(1:2,offs1);
+im2_points = fim2(1:2,offs2);
+
+[tform, inlierPoints1, inlierPoints2] = ...
+    estimateGeometricTransform(im1_points', im2_points', 'affine');
 
 figure;
-showMatchedFeatures(oim1, oim2, inside_im1_Points, ...
-    inside_im2_Points, 'montage');
+showMatchedFeatures(oim1, oim2, inlierPoints1, ...
+    inlierPoints2, 'montage');
 
 boxPolygon = [1, 1;size(oim1, 2), 1;size(oim1, 2), size(oim1, 1);... 
         1, size(oim1, 1);1, 1];
