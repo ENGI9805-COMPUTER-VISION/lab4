@@ -13,6 +13,8 @@ ref_image = imread('img/ref.jpg');
 if n == 3
     ref_image = rgb2gray(ref_image);
 end
+% Store number of inliers of all test images
+num_of_inliers = zeros(1, 12);
 
 for i=1:length(images)
     [r,c,n] = size(images{i});
@@ -65,8 +67,15 @@ for i=1:length(images)
     ransac_n = 4000;
     [H, num_inliers, residual] = ...
         ransac(im1_points', im2_points', ransac_n, @fit_homography, @homography_transform);
-    disp(num_inliers);
+    num_of_inliers(i) = num_inliers;
 end
+
+fileID = fopen('result/num_of_inliers.txt', 'w');
+fprintf(fileID, '%6s %18s\n','No.','No of inliers');
+for i=1:length(images)
+    fprintf(fileID, '\t%d\t\t %f\n', i, num_of_inliers(i));
+end
+fclose(fileID);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Part 4%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 boxPolygon = [1, 1;size(image1, 2), 1;size(image1, 2), size(image1, 1);... 
