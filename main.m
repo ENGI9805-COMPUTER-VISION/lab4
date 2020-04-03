@@ -43,25 +43,31 @@ for i=1:length(images)
     matches_IM = h.CData;
     output_file = 'result/' + string(i) + '.jpg';
     imwrite(matches_IM, output_file);
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Part 2%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Get the top 3 matches for each test image
-offs1 = match_offs(1, 1:3);
-offs2 = match_offs(2, 1:3);
+    % Get the top 3 matches for each test image
+    offs1 = match_offs(1, 1:3);
+    offs2 = match_offs(2, 1:3);
 
-im1_points = descriptor_loc1(1:2,offs1);
-im2_points = descriptor_loc2(1:2,offs2);
+    im1_points = descriptor_loc1(1:2,offs1);
+    im2_points = descriptor_loc2(1:2,offs2);
 
-% Use affine transformation between the features in the two images
-[tform, inlierPoints1, inlierPoints2, status] = ...
-    estimateGeometricTransform(im1_points', im2_points', 'affine');
-
+    % Use affine transformation between the features in the two images
+    [tform, inlierPoints1, inlierPoints2, status] = ...
+        estimateGeometricTransform(im1_points', im2_points', 'affine');
+    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Part 3%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-ransac_n = 4000;
-[H, num_inliers, residual] = ...
-    ransac(XY, XY_, ransac_n, @fit_homography, @homography_transform);
+    offs1 = match_offs(1, :);
+    offs2 = match_offs(2, :);
+    im1_points = descriptor_loc1(1:2,offs1);
+    im2_points = descriptor_loc2(1:2,offs2);
+    ransac_n = 4000;
+    [H, num_inliers, residual] = ...
+        ransac(im1_points', im2_points', ransac_n, @fit_homography, @homography_transform);
+    disp(num_inliers);
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Part 4%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 boxPolygon = [1, 1;size(image1, 2), 1;size(image1, 2), size(image1, 1);... 
         1, size(image1, 1);1, 1];
