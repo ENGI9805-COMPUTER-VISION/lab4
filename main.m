@@ -1,5 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Part 1%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear;
+clear all;
+close all;
 image_files = dir(fullfile('img', '*.jpg'));
 images = cell(1, 12);
 for i=1:length(image_files)
@@ -15,6 +16,7 @@ if n == 3
 end
 % Store number of inliers of all test images
 num_of_inliers = zeros(1, 12);
+max_num_of_inliers = 0;
 
 for i=1:length(images)
     [r,c,n] = size(images{i});
@@ -64,10 +66,15 @@ for i=1:length(images)
     offs2 = match_offs(2, :);
     im1_points = descriptor_loc1(1:2,offs1);
     im2_points = descriptor_loc2(1:2,offs2);
-    ransac_n = 4000;
-    [H, num_inliers, residual] = ...
+    ransac_n = 5000;
+    [num_inliers, im1_points, im2_points] = ...
         ransac(im1_points', im2_points', ransac_n, @fit_homography, @homography_transform);
     num_of_inliers(i) = num_inliers;
+    if max_num_of_inliers < num_inliers
+        max_num_of_inliers = num_inliers;
+        inlier_matches1 = im1_points;
+        inlier_matches2 = im2_points;
+    end
 end
 
 fileID = fopen('result/num_of_inliers.txt', 'w');
@@ -78,15 +85,21 @@ end
 fclose(fileID);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Part 4%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-boxPolygon = [1, 1;size(image1, 2), 1;size(image1, 2), size(image1, 1);... 
-        1, size(image1, 1);1, 1];
+% Find the test image that had the most inliers
+[val, ind] = sort(num_of_inliers, 'descend');
+boxPolygon = [1, 1;size(ref_image, 2), 1;size(ref_image, 2), ...
+    size(ref_image, 1); 1, size(ref_image, 1);1, 1];
     
+% Re-compute the transformation using all the inlier matches
+[tform, inlierPoints1, inlierPoints2, status] = ...
+    estimateGeometricTransform(inlier_matches1, inlier_matches2, 'affine');
+
 newBoxPolygon = transformPointsForward(tform, boxPolygon);
 
 figure;
-subplot(1,2,1),imshow(image1);
+subplot(1,2,1),imshow(ref_image);
 subplot(1,2,2);
-imshow(image2);
+imshow(images{ind(1)});
 hold on;
 line(newBoxPolygon(:, 1), newBoxPolygon(:, 2), 'Color', 'y');
 

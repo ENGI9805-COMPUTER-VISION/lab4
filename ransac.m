@@ -1,4 +1,4 @@
-function [result, best_num_inliers, residual] = ransac(XY, XY_, N, estimate_func, transform_func)
+function [best_num_inliers, im1_points, im2_points] = ransac(XY, XY_, N, estimate_func, transform_func)
 % RANSAC - A simple RANSAC implementation.
 %
 % Usage:    [result, best_num_inliers, residual] = ransac(XY, XY_, ransac_n, @fit_homography, @homography_transform)
@@ -11,9 +11,10 @@ function [result, best_num_inliers, residual] = ransac(XY, XY_, N, estimate_func
 %           transform_func- Function to transform points from one image to another.
 %
 % Returns:
-%           result        - The best homography H.
-%           best_num_inliers     
-%           residual      
+%           best_num_inliers     The No. of inliers of the best homography
+%           im1_points           The inlier matches in image 1
+%           im2_points           The inlier matches in image 2
+
 
     best_H = [];
     best_num_inliers = 0;
@@ -36,16 +37,15 @@ function [result, best_num_inliers, residual] = ransac(XY, XY_, N, estimate_func
         dists = sum((XYr_ - XYf_).^2,2);
 
         % inliner is defined as dist < 0.3
-        ind_b = find(dists<0.3);
-        num_inliers = length(ind_b);
+        ind_inl = find(dists<0.3);
+        num_inliers = length(ind_inl);
         
-        % found a better one
+        % found a better homography
         if best_num_inliers < num_inliers
             best_H = H;
             best_num_inliers = num_inliers;
-            residual = mean(dists(ind_b));
+            im1_points = XYr(ind_inl, :);
+            im2_points = XYr_(ind_inl, :);
         end
     end
-
-    result = best_H;
 end
