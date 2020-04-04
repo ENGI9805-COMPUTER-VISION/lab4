@@ -14,8 +14,8 @@ ref_image = imread('img/ref.jpg');
 if n == 3
     ref_image = rgb2gray(ref_image);
 end
-% Store number of inliers of all test images
-num_of_inliers = zeros(1, 12);
+% Store the test image no. and number of inliers of that test image
+num_of_inliers = zeros(2, 12);
 max_num_of_inliers = 0;
 
 for i=1:length(images)
@@ -69,24 +69,24 @@ for i=1:length(images)
     ransac_n = 5000;
     [num_inliers, im1_points, im2_points] = ...
         ransac(im1_points', im2_points', ransac_n, @fit_homography, @homography_transform);
-    num_of_inliers(i) = num_inliers;
+    num_of_inliers(1, i) = i;
+    num_of_inliers(2, i) = num_inliers;
     if max_num_of_inliers < num_inliers
         max_num_of_inliers = num_inliers;
         inlier_matches1 = im1_points;
         inlier_matches2 = im2_points;
     end
 end
-
+% Sort the test images as per the number of inliers
+[val, ind] = sort(num_of_inliers(2, :), 'descend');
 fileID = fopen('result/num_of_inliers.txt', 'w');
-fprintf(fileID, '%6s %18s\n','No.','No of inliers');
-for i=1:length(images)
-    fprintf(fileID, '\t%d\t\t %f\n', i, num_of_inliers(i));
+fprintf(fileID, '%8s %20s\n','No.','No of inliers');
+for i=1:length(ind)
+    fprintf(fileID, '\t%d\t\t %d\n', ind(i), num_of_inliers(2, ind(i)));
 end
 fclose(fileID);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Part 4%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Find the test image that had the most inliers
-[val, ind] = sort(num_of_inliers, 'descend');
 boxPolygon = [1, 1;size(ref_image, 2), 1;size(ref_image, 2), ...
     size(ref_image, 1); 1, size(ref_image, 1);1, 1];
     
